@@ -32,6 +32,7 @@ struct Header
 };
 
 
+// only listing and extracting files are now supported
 enum mode
 {
     LIST,
@@ -54,7 +55,6 @@ long oct2dec(char *octal)
 
     return decimal;
 }
-
 
 
 long get_archive_size(FILE *fin)
@@ -93,7 +93,6 @@ void is_tar_archive(struct Header *header)
 }
 
 
-
 // only regular files are supported
 void is_regular_file(struct Header *header)
 {
@@ -102,7 +101,6 @@ void is_regular_file(struct Header *header)
         errx(2, "Unsupported header type: %d", header->typeflag[0]);
     }
 }
-
 
 
 // if filename appears among arguments to be listed, mark the file as found (1)
@@ -122,7 +120,6 @@ bool mark_file(char *filename, char **files_args, int files_count, bool *files_f
 }
 
 
-
 // reports files that were not found in the archive
 // returns true if any of specified files was NOT present in archive
 bool report_missing_files(char **files_args, int files_count, bool *files_found)
@@ -140,7 +137,6 @@ bool report_missing_files(char **files_args, int files_count, bool *files_found)
 
     return was_found;
 }
-
 
 
 void extract_file(FILE *fin, char *buffer)
@@ -186,28 +182,26 @@ void extract_file(FILE *fin, char *buffer)
 }
 
 
-
-// reads whole archive and compare every filename with supplied arguments
+// reads whole archive and compare every filename with arguments
 // prints filenames and extracts files if needed
 void read_archive(FILE *fin, long archive_size, char **files_args, int files_count, enum mode action, bool verbose)
 {
     struct Header *header;
     char buffer[BLOCK_SIZE];
-    long file_size;                         // size of archived file according to current header
-    long blocks_count;                      // number of blocks with contents of file
-    bool first_empty = false;               // first zero block encountered
-    bool second_empty = false;              // second zero block encountered
-    int blocks_read = 0;                    // number of blocks read
+    long file_size;                             // size of archived file according to current header
+    long blocks_count;                          // number of blocks with contents of file
+    bool first_empty = false;                   // first zero block encountered
+    bool second_empty = false;                  // second zero block encountered
+    int blocks_read = 0;                        // number of blocks read
 
 
-    // used for evidence which files supplied as arguments were found in the archive
+    // used for evidence which files were found in the archive
     bool *files_found = calloc(files_count, sizeof(bool));
 
     if (files_found == NULL)
     {
         errx(2, "calloc");
     }
-
 
     while (fread(&buffer, BLOCK_SIZE, 1,  fin) == 1)
     {
@@ -227,15 +221,12 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
             }
         }
 
-
         header = (struct Header*)&buffer;
         file_size = oct2dec(header->size);                          // size of file in the current entry
         blocks_count = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;   // number of blocks containing file data, rounded up
 
-
-        is_tar_archive(header);             // check magic field in header
-        is_regular_file(header);            // check typeflag in header
-
+        is_tar_archive(header);                 // check magic field in header
+        is_regular_file(header);                // check typeflag field in header
 
         // filename was found among arguments
         bool filename_found = mark_file(header->name, files_args, files_count, files_found);
@@ -243,19 +234,16 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
         // if there are no arguments or filename was among them, it may be printed
         bool should_print = (files_count == 0 || filename_found) ? true : false;
 
-        // when in listing mode, print filename if it was among arguments or no arguments were supplied
-        // when in extraction mode, print filename if verbose and it was among arguments 
+        // when in listing mode, print filename
+        // when in extraction mode, print filename if verbose flag is also set 
         if (should_print && (action == LIST || (action == EXTRACT && verbose)))
         {
             printf("%s\n", header->name);
         }
 
-
         fflush(stdout);
 
-
-        // when in extract mode and filename was supplied as argument or no arguments were supplied
-        // extract file from current entry
+        // when in extraction mode, extract file from current entry
         // else advance to the next file header
         if (action == EXTRACT && should_print)
         {
@@ -276,13 +264,11 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
         blocks_read += blocks_count;
     }
 
-
     // one empty block triggers a warning
     if (first_empty && !second_empty)
     {
         warnx("A lone zero block at %d", blocks_read);
     }
-
 
     // print files not found in archive
     if (report_missing_files(files_args, files_count, files_found))
@@ -290,11 +276,9 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
         errx(2, "Exiting with failure status due to previous errors");
     }
 
-
     free(files_args);
     free(files_found);
 }
-
 
 
 int main(int argc, char **argv)
@@ -311,6 +295,7 @@ int main(int argc, char **argv)
     bool tflag = false;
     bool xflag = false;
     bool vflag = false;
+    
     int files_count = 0;
 
     char *filename;                                         // archive name
@@ -358,7 +343,6 @@ int main(int argc, char **argv)
         }
     }
 
-
     if (!fflag)
     {
         warnx("Refusing to read archive contents from terminal");
@@ -370,12 +354,10 @@ int main(int argc, char **argv)
         errx(2, "You must specify either -t  or -x option");    
     }
 
-
     if ((fin = fopen(filename, "r")) == NULL)
     {
         errx(2, "Error opening file");
     }
-    
 
     enum mode action = tflag ? LIST : EXTRACT;
 
@@ -384,4 +366,3 @@ int main(int argc, char **argv)
 
     fclose(fin);
 }
-
