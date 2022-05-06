@@ -203,7 +203,7 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
         errx(2, "calloc");
     }
 
-    // until block of 512 bytes is successfully read
+    // while block of 512 bytes is successfully read
     while (fread(&buffer, BLOCK_SIZE, 1,  fin) == 1)
     {
         blocks_read++;
@@ -301,7 +301,6 @@ int main(int argc, char **argv)
 
     char *filename;                                         // archive name
     char **files_args = malloc(sizeof(char*) * argc);       // files to be listed/extracted, supplied as arguments
-
 
     if (files_args == NULL)
     {
