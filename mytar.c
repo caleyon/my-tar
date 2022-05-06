@@ -32,7 +32,7 @@ struct Header
 };
 
 
-// only listing and extracting files are now supported
+// only listing and extracting files is now supported
 enum mode
 {
     LIST,
@@ -203,6 +203,7 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
         errx(2, "calloc");
     }
 
+    // until block of 512 bytes is successfully read
     while (fread(&buffer, BLOCK_SIZE, 1,  fin) == 1)
     {
         blocks_read++;
@@ -307,7 +308,6 @@ int main(int argc, char **argv)
         errx(2, "malloc");
     }
 
-
     for (int i = 1; i < argc; i++)
     {
         if (argv[i][0] == '-')
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
 
     if (!fflag)
     {
-        warnx("Refusing to read archive contents from terminal");
+        warnx("Refusing to read archive contents from terminal (missing -f option?)");
         errx(2, "Error is not recoverable: exiting now");
     }
 
@@ -366,3 +366,4 @@ int main(int argc, char **argv)
 
     fclose(fin);
 }
+
