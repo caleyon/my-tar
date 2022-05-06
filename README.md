@@ -1,2 +1,2 @@
 # my-tar
-Minimalistic tar implementation
+Minimalistic tar implementation.
