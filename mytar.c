@@ -293,7 +293,7 @@ int main(int argc, char **argv)
     bool xflag = false;
     bool vflag = false;
     
-    int files_count = 0;
+    int files_count = 0;                                    // number of file arguments
 
     char *filename;                                         // archive name
     char **files_args = malloc(sizeof(char*) * argc);       // files to be listed/extracted, supplied as arguments
