@@ -186,10 +186,7 @@ void extract_file(FILE *fin, char *buffer)
 // prints filenames and extracts files if needed
 void read_archive(FILE *fin, long archive_size, char **files_args, int files_count, enum mode action, bool verbose)
 {
-    struct Header *header;
     char buffer[BLOCK_SIZE];
-    long file_size;                             // size of archived file according to current header
-    long blocks_count;                          // number of blocks with contents of file
     bool first_empty = false;                   // first zero block encountered
     bool second_empty = false;                  // second zero block encountered
     int blocks_read = 0;                        // number of blocks read
@@ -222,9 +219,9 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
             }
         }
 
-        header = (struct Header*)&buffer;
-        file_size = oct2dec(header->size);                          // size of file in the current entry
-        blocks_count = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;   // number of blocks containing file data, rounded up
+        struct Header *header = (struct Header*)&buffer;
+        long file_size = oct2dec(header->size);                          // size of file in the current entry
+        long blocks_count = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;   // number of blocks with contents of file, rounded up
 
         is_tar_archive(header);                 // check magic field in header
         is_regular_file(header);                // check typeflag field in header
@@ -286,12 +283,11 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        errx(2, "Insufficient number of arguments");
+        errx(2, "You must specify one of the '-tx' options");
     }
-    
-    FILE *fin;
-    long archive_size;
 
+    FILE *fin;
+    
     bool fflag = false;
     bool tflag = false;
     bool xflag = false;
@@ -315,12 +311,10 @@ int main(int argc, char **argv)
             {
                 case 'f':
                     fflag = true;
-
                     if (i + 1 == argc)
                     {
                         errx(2, "Option requires an argument -- 'f'");
                     }
-
                     filename = argv[++i];
                     break;
                 case 't':
@@ -360,9 +354,8 @@ int main(int argc, char **argv)
 
     enum mode action = tflag ? LIST : EXTRACT;
 
-    archive_size = get_archive_size(fin);
+    long archive_size = get_archive_size(fin);
     read_archive(fin, archive_size, files_args, files_count, action, vflag);
 
     fclose(fin);
 }
-
