@@ -189,8 +189,7 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
     char buffer[BLOCK_SIZE];
     bool first_empty = false;                   // first zero block encountered
     bool second_empty = false;                  // second zero block encountered
-    int blocks_read = 0;                        // number of blocks read
-
+    int blocks_read = 0;                        // number of blocks read so far
 
     // used for evidence which files were found in the archive
     bool *files_found = calloc(files_count, sizeof(bool));
