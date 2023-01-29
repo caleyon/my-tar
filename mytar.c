@@ -4,11 +4,9 @@
 #include <stdbool.h>
 #include <err.h>
 
-
 #define BLOCK_SIZE  512
 #define MAGIC       "ustar  "
 #define REG_FILE    "0"
-
 
 // POSIX tar header
 struct Header
@@ -31,14 +29,11 @@ struct Header
     char prefix[155];
 };
 
-
 // only listing and extracting files is now supported
 enum mode
 {
-    LIST,
-    EXTRACT
+    LIST, EXTRACT
 };
-
 
 // computes decimal number from string representation of octal number
 long oct2dec(char *octal)
@@ -52,20 +47,16 @@ long oct2dec(char *octal)
         decimal += (octal[i] - '0') * radix;
         radix *= 8;
     }
-
     return decimal;
 }
-
 
 long get_archive_size(FILE *fin)
 {
     fseek(fin, 0, SEEK_END);
     long size = ftell(fin);
     fseek(fin, 0, SEEK_SET);
-
     return size;
 }
-
 
 // returns true if block contains only zero bytes
 bool is_empty_block(char *buffer)
@@ -81,7 +72,6 @@ bool is_empty_block(char *buffer)
     return true;
 }
 
-
 // check "magic" field in header
 void is_tar_archive(struct Header *header)
 {
@@ -92,7 +82,6 @@ void is_tar_archive(struct Header *header)
     }
 }
 
-
 // only regular files are supported
 void is_regular_file(struct Header *header)
 {
@@ -102,23 +91,20 @@ void is_regular_file(struct Header *header)
     }
 }
 
-
 // if filename appears among arguments to be listed, mark the file as found (1)
 // and return true (so that filename will be printed)
 bool mark_file(char *filename, char **files_args, int files_count, bool *files_found)
 {
     for (int i = 0; i < files_count; i++)
     {
-        if (strcmp(filename, files_args[i]) == 0 && !files_found[i])
+        if (!files_found[i] && strcmp(filename, files_args[i]) == 0)
         {
             files_found[i] = true;
             return true;
         }
     }
-
     return false;
 }
-
 
 // reports files that were not found in the archive
 // returns true if any of specified files was NOT present in archive
@@ -134,10 +120,8 @@ bool report_missing_files(char **files_args, int files_count, bool *files_found)
             was_found = true;
         }
     }
-
     return was_found;
 }
-
 
 void extract_file(FILE *fin, char *buffer)
 {
@@ -181,12 +165,11 @@ void extract_file(FILE *fin, char *buffer)
     fclose(fout);
 }
 
-
 // reads whole archive and compare every filename with arguments
 // prints filenames and extracts files if needed
 void read_archive(FILE *fin, long archive_size, char **files_args, int files_count, enum mode action, bool verbose)
 {
-    char buffer[BLOCK_SIZE];
+    char buffer[BLOCK_SIZE] = { 0 };
     bool first_empty = false;                   // first zero block encountered
     bool second_empty = false;                  // second zero block encountered
     int blocks_read = 0;                        // number of blocks read so far
@@ -277,7 +260,6 @@ void read_archive(FILE *fin, long archive_size, char **files_args, int files_cou
     free(files_found);
 }
 
-
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -358,4 +340,3 @@ int main(int argc, char **argv)
 
     fclose(fin);
 }
-
